@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.template.batch.dao.RestUserInfoDao">
+
+  <resultMap id="rest-user-info-result" type="RestUserInfo">
+    <result property="userId" column="USER_ID"/>
+    <result property="createDate" column="CREATE_DATE"/>
+  </resultMap>
+
+  <select id="findOneByUserId" resultMap="rest-user-info-result">
+    SELECT
+      *
+    FROM REST_USER_INFO
+      WHERE USER_ID = #{userId}
+  </select>
+
+  <select id="getAllCount" resultType="int">
+    SELECT
+      COUNT(*)
+    FROM
+      REST_USER_INFO
+  </select>
+
+  <insert id="add">
+    INSERT INTO REST_USER_INFO(
+      USER_ID,
+      CREATE_DATE
+    ) VALUES (
+      #{userId},
+      #{createDate, jdbcType=TIMESTAMP}
+    )
+  </insert>
+
+  <insert id="addAll" parameterType="list">
+    INSERT INTO REST_USER_INFO(
+      USER_ID,
+      CREATE_DATE
+    ) VALUES (
+    <foreach collection="list" item="item" separator=",">
+      #{item.userId},
+      #{item.createDate, jdbcType=TIMESTAMP}
+    </foreach>
+    )
+  </insert>
+
+</mapper>

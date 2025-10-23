@@ -1,0 +1,57 @@
+# === 서버 설정 ===
+server:
+  port: 8081
+  servlet:
+    context-path: /bat
+
+spring:
+  application:
+    name: TEMPLATE-BATCH
+
+  # H2 데이터베이스 URL 설정
+  datasource:
+    url: ${DB_URL}
+    driverClassName: ${DB_DRIVER}
+    username: ${DB_ID}
+    password: ${DB_PASSWORD}
+
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      auto-commit: false
+  batch:
+    initialize-schema: always
+    job:
+      enabled: false
+
+
+#  # MEM H2 콘솔 활성화 (개발환경에서만 사용)
+#  h2:
+#    console:
+#      enabled: true
+#      path: /h2-console
+#
+#  # === JPA/Hibernate 설정 ===
+#  jpa:
+#    hibernate:
+#      ddl-auto: create-drop  # DDL 자동 생성 설정 (개발: create-drop, 운영: validate)
+#    show-sql: true
+#    properties:
+#      hibernate:
+#        format_sql: true
+#    database-platform: org.hibernate.dialect.H2Dialect   # 데이터베이스 방언 설정
+
+  jackson:
+    default-property-inclusion: NON_NULL # JSON 응답 시 null 값 포함 여부
+
+logging:
+  level:
+    root: INFO
+    org:
+      springframework:
+        security: INFO
+    com:
+      template:
+        batch: INFO
+
+
