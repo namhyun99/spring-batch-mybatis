@@ -6,41 +6,39 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.jdbc.datasource.lookup.JndiDataSourceLookup;
-import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
 
 @Configuration
-@MapperScan(value = "com.template.batch.dao", sqlSessionFactoryRef = "sqlSessionFactory")
-public class DataSourceConfig {
+@MapperScan(value = "com.template.batch.dao.slave", sqlSessionFactoryRef = "slaveSqlSessionFactory")
+public class SlaveSourceConfig {
 
-  @ConfigurationProperties(prefix = "spring.datasource")
+  @Bean(name = "slaveDataSource")
+  @ConfigurationProperties(prefix = "spring.datasource.slave")
   public DataSource dataSource() {
     return DataSourceBuilder.create().type(HikariDataSource.class).build();
   }
 
-  @Bean
-  public SqlSessionFactory sqlSessionFactory(DataSource dataSource) throws Exception {
+  @Bean("slaveSqlSessionFactory")
+  public SqlSessionFactory slaveSqlSessionFactory(@Qualifier("slaveDataSource") DataSource dataSource) throws Exception {
     org.apache.ibatis.session.Configuration configuration = new org.apache.ibatis.session.Configuration();
     configuration.setDefaultExecutorType(ExecutorType.BATCH);
     configuration.setMapUnderscoreToCamelCase(true);
 
     SqlSessionFactoryBean bean = new SqlSessionFactoryBean();
     bean.setDataSource(dataSource);
-    bean.setTypeAliasesPackage("com.template.batch.entity");
+    bean.setTypeAliasesPackage("com.template.batch.entity.slave");
     bean.setConfiguration(configuration);
 
-    Resource[] res = new PathMatchingResourcePatternResolver().getResources("classpath*:META-INF/sql/**/*-sql.xml");
+    Resource[] res = new PathMatchingResourcePatternResolver().getResources("classpath*:META-INF/sql/slave/**/*-sql.xml");
     bean.setMapperLocations(res);
 
     /*
@@ -48,6 +46,11 @@ public class DataSourceConfig {
     bean.setConfigLocation(myBatisConfig);
     */
     return bean.getObject();
+  }
+
+  @Bean(name = "slaveTransactionManager")
+  public DataSourceTransactionManager slaveTransactionManager(@Qualifier("slaveDataSource") DataSource dataSource) {
+    return new DataSourceTransactionManager(dataSource);
   }
 
 }

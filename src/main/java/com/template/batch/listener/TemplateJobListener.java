@@ -1,13 +1,11 @@
 package com.template.batch.listener;
 
+import com.template.batch.BatchConstants;
+import com.template.batch.util.IdGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
-import org.springframework.batch.core.StepExecution;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
-import java.util.Set;
 
 
 @Slf4j
@@ -16,12 +14,14 @@ public class TemplateJobListener implements JobExecutionListener {
 
   @Override
   public void beforeJob(JobExecution jobExecution) {
-    Set<Map.Entry<String, Object>> entries = jobExecution.getExecutionContext().entrySet();
-    log.warn(">>>>>> beforeJob. jobId=[{}], jobName=[{}]",  jobExecution.getJobId(), jobExecution.getJobInstance().getJobName());
+    String batchJobId = IdGenerator.generateJobId();
+    jobExecution.getExecutionContext().putString(BatchConstants.BATCH_JOB_ID.name(), batchJobId);
+    log.warn("[{}] beforeJob. jobId=[{}], jobName=[{}]",  batchJobId, jobExecution.getJobId(), jobExecution.getJobInstance().getJobName());
   }
 
   @Override
   public void afterJob(JobExecution jobExecution) {
-    log.warn(">>>>>> afterJob. jobId=[{}], jobName=[{}]",  jobExecution.getJobId(), jobExecution.getJobInstance().getJobName());
+    String batchJobId = jobExecution.getExecutionContext().getString(BatchConstants.BATCH_JOB_ID.name());
+    log.warn("[{}] afterJob. jobId=[{}], jobName=[{}]", batchJobId, jobExecution.getJobId(), jobExecution.getJobInstance().getJobName());
   }
 }

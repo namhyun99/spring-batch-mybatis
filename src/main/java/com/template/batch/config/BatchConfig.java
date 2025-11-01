@@ -18,15 +18,15 @@ import javax.sql.DataSource;
 @RequiredArgsConstructor
 public class BatchConfig extends DefaultBatchConfigurer {
 
-  private final DataSource dataSource;
+  private final DataSource masterDataSource;
   private final PlatformTransactionManager mainTransactionManager;
 
   @Override
   protected JobRepository createJobRepository() throws Exception {
     JobRepositoryFactoryBean factory = new JobRepositoryFactoryBean();
-    factory.setDataSource(dataSource);
+    factory.setDataSource(masterDataSource);
     factory.setTablePrefix("BATCH_");
-    factory.setTransactionManager(new DataSourceTransactionManager(dataSource));
+    factory.setTransactionManager(new DataSourceTransactionManager(masterDataSource));
     factory.setIsolationLevelForCreate("ISOLATION_READ_COMMITTED");
     factory.afterPropertiesSet();
     return factory.getObject();

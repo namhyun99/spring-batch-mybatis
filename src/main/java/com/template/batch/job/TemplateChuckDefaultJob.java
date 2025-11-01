@@ -1,7 +1,7 @@
 package com.template.batch.job;
 
-import com.template.batch.entity.RestUserInfo;
-import com.template.batch.entity.UserInfo;
+import com.template.batch.entity.slave.RestUserInfo;
+import com.template.batch.entity.master.UserInfo;
 import com.template.batch.listener.TemplateJobListener;
 import com.template.batch.listener.TemplateStepListener;
 import lombok.RequiredArgsConstructor;
@@ -16,59 +16,74 @@ import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.beans.factory.annotation.Configurable;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
 @RequiredArgsConstructor
-public class TemplateJob {
+public class TemplateChuckDefaultJob {
   private final JobBuilderFactory jobBuilderFactory;
   private final StepBuilderFactory stepBuilderFactory;
-  private final SqlSessionFactory sqlSessionFactory;
+
   private final TemplateJobListener templateJobListener;
   private final TemplateStepListener templateStepListener;
 
-  private static int CHUCK_SIZE = 5000;
+  public static final String JOB_NAME = "restUserJob";
+  public static final String STEP_NAME = "restUserStep";
+  private final int CHUCK_SIZE = 5000;
 
   @Bean
-  public Job restUserJob() {
-    return jobBuilderFactory.get("restUserJob")
+  public Job restUserJob(Step restUserStep) {
+    return jobBuilderFactory.get(JOB_NAME)
             .listener(templateJobListener)
-            .start(restUserStep())
+            .start(restUserStep)
             .build();
   }
 
-
   @Bean
-  public Step restUserStep(){
-    return stepBuilderFactory.get("restUserStep")
+  public Step restUserStep(
+          MyBatisPagingItemReader<UserInfo> reader,
+          ItemProcessor<UserInfo, RestUserInfo> processor,
+          MyBatisBatchItemWriter<RestUserInfo> writer,
+          @Qualifier("slaveTransactionManager") PlatformTransactionManager slaveTransactionManager
+  ){
+    return stepBuilderFactory.get(STEP_NAME)
             .listener(templateStepListener)
             .<UserInfo, RestUserInfo>chunk(CHUCK_SIZE)
-            .reader(reader())
+            .reader(reader)
+            .processor(processor)
+            .writer(writer)
             .faultTolerant()
-            .processor(processor())
-            .writer(writer())
+            .retryLimit(2)
+            .retry(Exception.class)
+            .transactionManager(slaveTransactionManager)
             .build();
   }
 
   @Bean
   @StepScope
-  public MyBatisPagingItemReader<UserInfo> reader() {
-    LocalDateTime startDate = LocalDateTime.of(2025,10,23, 0, 0 ,0);
-    LocalDateTime endDate = LocalDateTime.of(2025,10,23, 23, 59 ,59);
+  public MyBatisPagingItemReader<UserInfo> reader(
+          @Value("#{jobParameters[startDate]}") String startDate,
+          @Value("#{jobParameters[endDate]}") String endDate,
+          @Qualifier("masterSqlSessionFactory") SqlSessionFactory sqlSessionFactory
+  ) {
 
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     Map<String, Object> parameterValues = new HashMap<>();
-    parameterValues.put("startDate", startDate);
-    parameterValues.put("endDate", endDate);
+    parameterValues.put("startDate", LocalDateTime.parse(startDate, formatter));
+    parameterValues.put("endDate", LocalDateTime.parse(endDate, formatter));
 
     return new MyBatisPagingItemReaderBuilder<UserInfo>()
             .sqlSessionFactory(sqlSessionFactory)
-            .queryId("com.template.batch.dao.UserInfoDao.findByCreateDateBetween")
+            .queryId("com.template.batch.dao.master.UserInfoDao.findByCreateDateBetween")
             .parameterValues(parameterValues)
             .pageSize(CHUCK_SIZE)
             .build();
@@ -85,10 +100,10 @@ public class TemplateJob {
   };
 
   @Bean
-  public MyBatisBatchItemWriter<RestUserInfo> writer() {
+  public MyBatisBatchItemWriter<RestUserInfo> writer(@Qualifier("slaveSqlSessionFactory") SqlSessionFactory sqlSessionFactory) {
     return new MyBatisBatchItemWriterBuilder<RestUserInfo>()
             .sqlSessionFactory(sqlSessionFactory)
-            .statementId("com.template.batch.dao.RestUserInfoDao.add")
+            .statementId("com.template.batch.dao.slave.RestUserInfoDao.add")
             .assertUpdates(true)
             .build();
   }

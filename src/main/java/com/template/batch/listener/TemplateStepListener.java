@@ -1,6 +1,7 @@
 package com.template.batch.listener;
 
 
+import com.template.batch.BatchConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepExecution;
@@ -15,14 +16,17 @@ public class TemplateStepListener implements StepExecutionListener {
 
   @Override
   public void beforeStep(StepExecution stepExecution) {
-    log.warn(">>>>>> beforeStep. stepName=[{}]",  stepExecution.getStepName());
+    String batchJobId = stepExecution.getJobExecution().getExecutionContext().getString(BatchConstants.BATCH_JOB_ID.name());
+    log.warn("[{}] beforeStep. stepName=[{}]", batchJobId, stepExecution.getStepName());
 
   }
 
   @Override
   public ExitStatus afterStep(StepExecution stepExecution) {
-    log.warn(">>>>>> afterStep. stepName=[{}], readCount=[{}], writeCount=[{}], commitCount=[{}]",
-            stepExecution.getStepName(), stepExecution.getReadCount(), stepExecution.getWriteCount(), stepExecution.getCommitCount());
+    String batchJobId = stepExecution.getJobExecution().getExecutionContext().getString(BatchConstants.BATCH_JOB_ID.name());
+
+    log.warn("[{}] afterStep. stepName=[{}], readCount=[{}], writeCount=[{}], commitCount=[{}]",
+            batchJobId, stepExecution.getStepName(), stepExecution.getReadCount(), stepExecution.getWriteCount(), stepExecution.getCommitCount());
     return stepExecution.getExitStatus();
   }
 }

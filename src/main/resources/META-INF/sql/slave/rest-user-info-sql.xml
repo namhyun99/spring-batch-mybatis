@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.template.batch.dao.RestUserInfoDao">
+<mapper namespace="com.template.batch.dao.slave.RestUserInfoDao">
 
   <resultMap id="rest-user-info-result" type="RestUserInfo">
     <result property="userId" column="USER_ID"/>
@@ -42,5 +42,9 @@
     </foreach>
     )
   </insert>
+
+  <delete id="deleteAll">
+    TRUNCATE TABLE REST_USER_INFO
+  </delete>
 
 </mapper>

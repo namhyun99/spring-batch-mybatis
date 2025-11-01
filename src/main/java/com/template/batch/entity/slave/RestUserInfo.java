@@ -1,4 +1,4 @@
-package com.template.batch.entity;
+package com.template.batch.entity.slave;
 
 
 import lombok.*;
@@ -10,8 +10,7 @@ import java.time.LocalDateTime;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserInfo {
+public class RestUserInfo {
   private String userId;
-  private String restFlag;
   private LocalDateTime createDate;
 }

@@ -1,12 +1,12 @@
-package com.template.batch.dao;
+package com.template.batch.dao.slave;
 
-import com.template.batch.entity.RestUserInfo;
+import com.template.batch.entity.slave.RestUserInfo;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Repository
+@Mapper
 public interface RestUserInfoDao {
 
   RestUserInfo findOneByUserId(@Param("userId") String userId);
@@ -16,4 +16,6 @@ public interface RestUserInfoDao {
   void addAll(List<RestUserInfo> restUserInfos);
 
   int getAllCount();
+
+  void deleteAll();
 }

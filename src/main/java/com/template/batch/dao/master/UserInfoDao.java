@@ -1,12 +1,12 @@
-package com.template.batch.dao;
+package com.template.batch.dao.master;
 
-import com.template.batch.entity.UserInfo;
+import com.template.batch.entity.master.UserInfo;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Repository
+@Mapper
 public interface UserInfoDao {
 
   UserInfo findOneByUserId(@Param("userId") String userId);
@@ -20,4 +20,6 @@ public interface UserInfoDao {
   void updateFlag(@Param("userId") String userId);
 
   int getAllCount();
+
+  void deleteAll();
 }
