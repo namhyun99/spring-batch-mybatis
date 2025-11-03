@@ -6,9 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.batch.core.*;
-import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
-import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
-import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.batch.test.JobLauncherTestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -23,19 +20,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class TemplateChuckRetryCaseJobTest extends AbstractSetUserTestData{
+public class TemplateMyBatisCursorChuckJobTest extends AbstractSetUserTestData {
 
   @Autowired
   private JobLauncherTestUtils jobLauncherTestUtils;
   @Autowired
-  private TemplateChuckRetryCaseJob templateChuckRetryCaseJob;
+  private TemplateMyBatisCursorChuckJob templateMyBatisCursorChuckJob;
   @Autowired
-  @Qualifier(TemplateChuckRetryCaseJob.STEP_NAME)
-  private Step writerRetryStep;
-
+  @Qualifier(TemplateMyBatisCursorChuckJob.STEP_NAME)
+  private Step restUserCursorStep;
 
   @Test
-  public void writerRetryJob() throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException {
+  public void restUserCursorJob() throws Exception {
     JobParameters jobParameters =
             new JobParametersBuilder().addLong("timestamp", System.currentTimeMillis())
                     .addString(BatchConstants.BATCH_JOB_TYPE.name(), BatchJobType.TEMPLATE.getCode())
@@ -43,17 +39,16 @@ public class TemplateChuckRetryCaseJobTest extends AbstractSetUserTestData{
                     .addString("endDate", LocalDate.now().plusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE) + " 23:59:59")
                     .toJobParameters();
 
-    JobExecution jobExecution = jobLauncherTestUtils.getJobLauncher().run(templateChuckRetryCaseJob.writerRetryJob(writerRetryStep), jobParameters);
+    JobExecution jobExecution = jobLauncherTestUtils.getJobLauncher().run(templateMyBatisCursorChuckJob.restUserCursorJob(restUserCursorStep), jobParameters);
     JobInstance actualJobInstance = jobExecution.getJobInstance();
     ExitStatus actualJobExitStatus = jobExecution.getExitStatus();
 
     // then
     assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
-    assertThat(actualJobInstance.getJobName()).isEqualTo(TemplateChuckRetryCaseJob.JOB_NAME);
+    assertThat(actualJobInstance.getJobName()).isEqualTo(TemplateMyBatisCursorChuckJob.JOB_NAME);
     assertThat(actualJobExitStatus.getExitCode()).isEqualTo(ExitStatus.COMPLETED.getExitCode());
 
-    assertThat(userInfoDao.getAllCount()).isEqualTo(100);
-    assertThat(restUserInfoDao.getAllCount()).isEqualTo(100);
+    assertThat(userInfoDao.getAllCount()).isEqualTo(restUserInfoDao.getAllCount());
   }
 
 }

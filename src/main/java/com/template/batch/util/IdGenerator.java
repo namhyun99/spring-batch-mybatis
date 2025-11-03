@@ -12,11 +12,11 @@ public class IdGenerator {
   public static AtomicLong userSeq = new AtomicLong();
   public static AtomicLong jobSeq = new AtomicLong();
 
-  public static String PRE_FIX = "J";
+  public static final String PRE_FIX = "J";
 
-  public static String generateJobId() {
+  public static String generateJobId(String batchJobType) {
     StringBuffer sb = new StringBuffer();
-    sb.append(PRE_FIX);
+    sb.append(batchJobType);
     sb.append(getIpAddress());
     sb.append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
     sb.append(idSeq(4));

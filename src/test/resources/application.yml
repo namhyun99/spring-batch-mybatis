@@ -57,5 +57,7 @@ logging:
     com:
       template:
         batch: info
+      zaxxer:
+        hikari: info
 
 

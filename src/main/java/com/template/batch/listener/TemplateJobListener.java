@@ -14,7 +14,9 @@ public class TemplateJobListener implements JobExecutionListener {
 
   @Override
   public void beforeJob(JobExecution jobExecution) {
-    String batchJobId = IdGenerator.generateJobId();
+    String code = jobExecution.getJobParameters().getString(BatchConstants.BATCH_JOB_TYPE.name());
+
+    String batchJobId = IdGenerator.generateJobId(code);
     jobExecution.getExecutionContext().putString(BatchConstants.BATCH_JOB_ID.name(), batchJobId);
     log.warn("[{}] beforeJob. jobId=[{}], jobName=[{}]",  batchJobId, jobExecution.getJobId(), jobExecution.getJobInstance().getJobName());
   }

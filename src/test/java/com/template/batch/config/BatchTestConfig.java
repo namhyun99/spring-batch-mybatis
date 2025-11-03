@@ -1,6 +1,6 @@
 package com.template.batch.config;
 
-import com.template.batch.job.TemplateChuckDefaultJob;
+import com.template.batch.job.TemplateMyBatisPagingChuckJob;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.test.JobLauncherTestUtils;
@@ -20,7 +20,7 @@ public class BatchTestConfig {
     return new JobLauncherTestUtils(){
       @Override
       @Autowired
-      public void setJob(@Qualifier(TemplateChuckDefaultJob.JOB_NAME) Job job) {
+      public void setJob(@Qualifier(TemplateMyBatisPagingChuckJob.JOB_NAME) Job job) {
         super.setJob(job);
       }
     };

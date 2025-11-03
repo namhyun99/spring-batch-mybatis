@@ -43,8 +43,7 @@ public class TemplateChuckErrorCaseJob {
 
   public static final String JOB_NAME = "writerErrorJob";
   public static final String STEP_NAME = "writerErrorStep";
-  private final int CHUCK_SIZE = 10;
-
+  private final int CHUCK_SIZE = 5000;
 
 
   @Bean
@@ -61,7 +60,7 @@ public class TemplateChuckErrorCaseJob {
           ItemProcessor<UserInfo, RestUserInfo> errorProcessor,
           ItemWriter<RestUserInfo> errorWriter,
           @Qualifier("slaveTransactionManager") PlatformTransactionManager slaveTransactionManager
-  ){
+  ) {
     return stepBuilderFactory.get(STEP_NAME)
             .listener(templateStepListener)
             .<UserInfo, RestUserInfo>chunk(CHUCK_SIZE)
@@ -94,27 +93,24 @@ public class TemplateChuckErrorCaseJob {
 
   @Bean
   public ItemProcessor<UserInfo, RestUserInfo> errorProcessor() {
-    return item -> {
-      return RestUserInfo.builder()
-              .userId(item.getUserId())
-              .createDate(item.getCreateDate())
-              .build();
-    };
-  };
+    return item ->
+            RestUserInfo.builder()
+                    .userId(item.getUserId())
+                    .createDate(item.getCreateDate())
+                    .build();
+  }
 
   @Bean
   public ItemWriter<RestUserInfo> errorWriter(@Qualifier("slaveSqlSessionFactory") SqlSessionFactory sqlSessionFactory) {
-    return items -> {
-
-      items.stream().forEach( r -> {
-        String seqNum = r.getUserId().substring(r.getUserId().length() - 4, r.getUserId().length());
+    return items ->
+            items.stream().forEach(r -> {
+              String seqNum = r.getUserId().substring(r.getUserId().length() - 4, r.getUserId().length());
 //        log.info("seqNum=[{}], {}", seqNum, r);
-        if(seqNum.equals("0024")) {
-          throw new BatchException("Writer Exception at UserId=" + r.getUserId());
-        }
+              if (seqNum.equals("0024")) {
+                throw new BatchException("Writer Exception at UserId=" + r.getUserId());
+              }
 
-        restUserInfoDao.add(r);
-      });
-    };
+              restUserInfoDao.add(r);
+            });
   }
 }
