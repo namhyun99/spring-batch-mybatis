@@ -1,9 +1,9 @@
-package com.template.batch.job;
+package com.template.batch.job.chunk;
 
 import com.template.batch.BatchException;
 import com.template.batch.dao.slave.RestUserInfoDao;
-import com.template.batch.entity.slave.RestUserInfo;
 import com.template.batch.entity.master.UserInfo;
+import com.template.batch.entity.slave.RestUserInfo;
 import com.template.batch.listener.TemplateJobListener;
 import com.template.batch.listener.TemplateStepListener;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ import java.util.Map;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-public class TemplateChuckErrorCaseJob {
+public class TemplateChuckRetryCaseJob {
   private final JobBuilderFactory jobBuilderFactory;
   private final StepBuilderFactory stepBuilderFactory;
 
@@ -41,39 +41,42 @@ public class TemplateChuckErrorCaseJob {
 
   private final RestUserInfoDao restUserInfoDao;
 
-  public static final String JOB_NAME = "writerErrorJob";
-  public static final String STEP_NAME = "writerErrorStep";
+  public static final String JOB_NAME = "writerRetryJob";
+  public static final String STEP_NAME = "writerRetryStep";
   private final int CHUCK_SIZE = 5000;
 
 
   @Bean
-  public Job writerErrorJob(Step writerErrorStep) {
+  public Job writerRetryJob(Step writerRetryStep) {
     return jobBuilderFactory.get(JOB_NAME)
             .listener(templateJobListener)
-            .start(writerErrorStep)
+            .start(writerRetryStep)
             .build();
   }
 
   @Bean
-  public Step writerErrorStep(
-          MyBatisPagingItemReader<UserInfo> errorReader,
-          ItemProcessor<UserInfo, RestUserInfo> errorProcessor,
-          ItemWriter<RestUserInfo> errorWriter,
+  public Step writerRetryStep(
+          MyBatisPagingItemReader<UserInfo> retryReader,
+          ItemProcessor<UserInfo, RestUserInfo> retryProcessor,
+          ItemWriter<RestUserInfo> retryWriter,
           @Qualifier("slaveTransactionManager") PlatformTransactionManager slaveTransactionManager
   ) {
     return stepBuilderFactory.get(STEP_NAME)
             .listener(templateStepListener)
             .<UserInfo, RestUserInfo>chunk(CHUCK_SIZE)
-            .reader(errorReader)
-            .processor(errorProcessor)
-            .writer(errorWriter)
+            .reader(retryReader)
+            .processor(retryProcessor)
+            .writer(retryWriter)
+            .faultTolerant()
+            .retryLimit(3)
+            .retry(Exception.class)
             .transactionManager(slaveTransactionManager)
             .build();
   }
 
   @Bean
   @StepScope
-  public MyBatisPagingItemReader<UserInfo> errorReader(
+  public MyBatisPagingItemReader<UserInfo> retryReader(
           @Value("#{jobParameters[startDate]}") String startDate,
           @Value("#{jobParameters[endDate]}") String endDate,
           @Qualifier("masterSqlSessionFactory") SqlSessionFactory sqlSessionFactory
@@ -92,21 +95,26 @@ public class TemplateChuckErrorCaseJob {
   }
 
   @Bean
-  public ItemProcessor<UserInfo, RestUserInfo> errorProcessor() {
+  public ItemProcessor<UserInfo, RestUserInfo> retryProcessor() {
     return item ->
             RestUserInfo.builder()
                     .userId(item.getUserId())
                     .createDate(item.getCreateDate())
                     .build();
+
   }
 
+
+  private int attempt = 0;
+
   @Bean
-  public ItemWriter<RestUserInfo> errorWriter(@Qualifier("slaveSqlSessionFactory") SqlSessionFactory sqlSessionFactory) {
+  public ItemWriter<RestUserInfo> retryWriter(@Qualifier("slaveSqlSessionFactory") SqlSessionFactory sqlSessionFactory) {
     return items ->
             items.stream().forEach(r -> {
               String seqNum = r.getUserId().substring(r.getUserId().length() - 4, r.getUserId().length());
-//        log.info("seqNum=[{}], {}", seqNum, r);
-              if (seqNum.equals("0024")) {
+//        log.info("attempt=[{}], seqNum=[{}], {}", attempt, seqNum, r);
+              if (seqNum.equals("0024") && attempt++ < 2) {
+                log.error("Writer Exception at UserId=[{}]", r.getUserId());
                 throw new BatchException("Writer Exception at UserId=" + r.getUserId());
               }
 

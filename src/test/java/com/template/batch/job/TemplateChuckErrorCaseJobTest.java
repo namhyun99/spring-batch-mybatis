@@ -2,6 +2,7 @@ package com.template.batch.job;
 
 import com.template.batch.BatchConstants;
 import com.template.batch.BatchJobType;
+import com.template.batch.job.chunk.TemplateChuckErrorCaseJob;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;

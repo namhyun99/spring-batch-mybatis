@@ -1,6 +1,6 @@
 package com.template.batch.config;
 
-import com.template.batch.job.TemplateMyBatisPagingChuckJob;
+import com.template.batch.job.chunk.TemplateMyBatisPagingChuckJob;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.test.JobLauncherTestUtils;

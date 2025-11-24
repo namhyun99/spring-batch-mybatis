@@ -1,17 +1,15 @@
-package com.template.batch.job;
+package com.template.batch.job.chunk;
 
+import com.template.batch.BatchException;
+import com.template.batch.dao.slave.RestUserInfoDao;
 import com.template.batch.entity.slave.RestUserInfo;
 import com.template.batch.entity.master.UserInfo;
-import com.template.batch.listener.TemplateChuckListener;
-import com.template.batch.listener.TemplateDBConnectListener;
 import com.template.batch.listener.TemplateJobListener;
 import com.template.batch.listener.TemplateStepListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.mybatis.spring.batch.MyBatisBatchItemWriter;
 import org.mybatis.spring.batch.MyBatisPagingItemReader;
-import org.mybatis.spring.batch.builder.MyBatisBatchItemWriterBuilder;
 import org.mybatis.spring.batch.builder.MyBatisPagingItemReaderBuilder;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -19,6 +17,7 @@ import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -33,55 +32,52 @@ import java.util.Map;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-public class TemplateMyBatisPagingChuckJob {
+public class TemplateChuckErrorCaseJob {
   private final JobBuilderFactory jobBuilderFactory;
   private final StepBuilderFactory stepBuilderFactory;
 
   private final TemplateJobListener templateJobListener;
   private final TemplateStepListener templateStepListener;
-  private final TemplateChuckListener templateChuckListener;
-  private final TemplateDBConnectListener templateJDBCConnectListener;
 
-  public static final String JOB_NAME = "restUserJob";
-  public static final String STEP_NAME = "restUserStep";
+  private final RestUserInfoDao restUserInfoDao;
 
-  public static final int CHUCK_SIZE = 10;
+  public static final String JOB_NAME = "writerErrorJob";
+  public static final String STEP_NAME = "writerErrorStep";
+  private final int CHUCK_SIZE = 5000;
+
 
   @Bean
-  public Job restUserJob(Step restUserStep) {
+  public Job writerErrorJob(Step writerErrorStep) {
     return jobBuilderFactory.get(JOB_NAME)
             .listener(templateJobListener)
-            .start(restUserStep)
+            .start(writerErrorStep)
             .build();
   }
 
   @Bean
-  public Step restUserStep(
-          MyBatisPagingItemReader<UserInfo> reader,
-          ItemProcessor<UserInfo, RestUserInfo> processor,
-          MyBatisBatchItemWriter<RestUserInfo> writer,
+  public Step writerErrorStep(
+          MyBatisPagingItemReader<UserInfo> errorReader,
+          ItemProcessor<UserInfo, RestUserInfo> errorProcessor,
+          ItemWriter<RestUserInfo> errorWriter,
           @Qualifier("slaveTransactionManager") PlatformTransactionManager slaveTransactionManager
   ) {
     return stepBuilderFactory.get(STEP_NAME)
             .listener(templateStepListener)
             .<UserInfo, RestUserInfo>chunk(CHUCK_SIZE)
-            .reader(reader)
-            .processor(processor)
-            .writer(writer)
-            .listener(templateChuckListener)
-//            .listener(templateJDBCConnectListener)
+            .reader(errorReader)
+            .processor(errorProcessor)
+            .writer(errorWriter)
             .transactionManager(slaveTransactionManager)
             .build();
   }
 
   @Bean
   @StepScope
-  public MyBatisPagingItemReader<UserInfo> reader(
+  public MyBatisPagingItemReader<UserInfo> errorReader(
           @Value("#{jobParameters[startDate]}") String startDate,
           @Value("#{jobParameters[endDate]}") String endDate,
           @Qualifier("masterSqlSessionFactory") SqlSessionFactory sqlSessionFactory
   ) {
-
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     Map<String, Object> parameterValues = new HashMap<>();
     parameterValues.put("startDate", LocalDateTime.parse(startDate, formatter));
@@ -96,22 +92,25 @@ public class TemplateMyBatisPagingChuckJob {
   }
 
   @Bean
-  public ItemProcessor<UserInfo, RestUserInfo> processor() {
+  public ItemProcessor<UserInfo, RestUserInfo> errorProcessor() {
     return item ->
             RestUserInfo.builder()
                     .userId(item.getUserId())
                     .createDate(item.getCreateDate())
                     .build();
-
   }
 
   @Bean
-  public MyBatisBatchItemWriter<RestUserInfo> writer(@Qualifier("slaveSqlSessionFactory") SqlSessionFactory sqlSessionFactory) {
-    return new MyBatisBatchItemWriterBuilder<RestUserInfo>()
-            .sqlSessionFactory(sqlSessionFactory)
-            .statementId("com.template.batch.dao.slave.RestUserInfoDao.add")
-            .assertUpdates(true)
-            .build();
-  }
+  public ItemWriter<RestUserInfo> errorWriter(@Qualifier("slaveSqlSessionFactory") SqlSessionFactory sqlSessionFactory) {
+    return items ->
+            items.stream().forEach(r -> {
+              String seqNum = r.getUserId().substring(r.getUserId().length() - 4, r.getUserId().length());
+//        log.info("seqNum=[{}], {}", seqNum, r);
+              if (seqNum.equals("0024")) {
+                throw new BatchException("Writer Exception at UserId=" + r.getUserId());
+              }
 
+              restUserInfoDao.add(r);
+            });
+  }
 }

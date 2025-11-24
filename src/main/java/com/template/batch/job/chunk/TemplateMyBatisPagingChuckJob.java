@@ -1,7 +1,7 @@
-package com.template.batch.job;
+package com.template.batch.job.chunk;
 
-import com.template.batch.entity.master.UserInfo;
 import com.template.batch.entity.slave.RestUserInfo;
+import com.template.batch.entity.master.UserInfo;
 import com.template.batch.listener.TemplateChuckListener;
 import com.template.batch.listener.TemplateDBConnectListener;
 import com.template.batch.listener.TemplateJobListener;
@@ -10,8 +10,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.batch.MyBatisBatchItemWriter;
-import org.mybatis.spring.batch.MyBatisCursorItemReader;
-import org.mybatis.spring.batch.builder.MyBatisCursorItemReaderBuilder;
+import org.mybatis.spring.batch.MyBatisPagingItemReader;
+import org.mybatis.spring.batch.builder.MyBatisBatchItemWriterBuilder;
+import org.mybatis.spring.batch.builder.MyBatisPagingItemReaderBuilder;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
@@ -32,7 +33,7 @@ import java.util.Map;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-public class TemplateMyBatisCursorChuckJob {
+public class TemplateMyBatisPagingChuckJob {
   private final JobBuilderFactory jobBuilderFactory;
   private final StepBuilderFactory stepBuilderFactory;
 
@@ -41,29 +42,30 @@ public class TemplateMyBatisCursorChuckJob {
   private final TemplateChuckListener templateChuckListener;
   private final TemplateDBConnectListener templateJDBCConnectListener;
 
-  public static final String JOB_NAME = "restUserCursorJob";
-  public static final String STEP_NAME = "restUserCursorStep";
+  public static final String JOB_NAME = "restUserJob";
+  public static final String STEP_NAME = "restUserStep";
+
   public static final int CHUCK_SIZE = 10;
 
   @Bean
-  public Job restUserCursorJob(Step restUserCursorStep) {
+  public Job restUserJob(Step restUserStep) {
     return jobBuilderFactory.get(JOB_NAME)
             .listener(templateJobListener)
-            .start(restUserCursorStep)
+            .start(restUserStep)
             .build();
   }
 
   @Bean
-  public Step restUserCursorStep(
-          MyBatisCursorItemReader<UserInfo> cursorItemReader,
+  public Step restUserStep(
+          MyBatisPagingItemReader<UserInfo> reader,
           ItemProcessor<UserInfo, RestUserInfo> processor,
           MyBatisBatchItemWriter<RestUserInfo> writer,
           @Qualifier("slaveTransactionManager") PlatformTransactionManager slaveTransactionManager
-  ){
+  ) {
     return stepBuilderFactory.get(STEP_NAME)
             .listener(templateStepListener)
             .<UserInfo, RestUserInfo>chunk(CHUCK_SIZE)
-            .reader(cursorItemReader)
+            .reader(reader)
             .processor(processor)
             .writer(writer)
             .listener(templateChuckListener)
@@ -74,7 +76,7 @@ public class TemplateMyBatisCursorChuckJob {
 
   @Bean
   @StepScope
-  public MyBatisCursorItemReader<UserInfo> cursorItemReader(
+  public MyBatisPagingItemReader<UserInfo> reader(
           @Value("#{jobParameters[startDate]}") String startDate,
           @Value("#{jobParameters[endDate]}") String endDate,
           @Qualifier("masterSqlSessionFactory") SqlSessionFactory sqlSessionFactory
@@ -85,13 +87,30 @@ public class TemplateMyBatisCursorChuckJob {
     parameterValues.put("startDate", LocalDateTime.parse(startDate, formatter));
     parameterValues.put("endDate", LocalDateTime.parse(endDate, formatter));
 
-
-    return new MyBatisCursorItemReaderBuilder<UserInfo>()
+    return new MyBatisPagingItemReaderBuilder<UserInfo>()
             .sqlSessionFactory(sqlSessionFactory)
             .queryId("com.template.batch.dao.master.UserInfoDao.findByCreateDateBetween")
             .parameterValues(parameterValues)
-//            .maxItemCount(CHUCK_SIZE)
-            .saveState(true) // restart 지원 여부
+            .pageSize(CHUCK_SIZE)
+            .build();
+  }
+
+  @Bean
+  public ItemProcessor<UserInfo, RestUserInfo> processor() {
+    return item ->
+            RestUserInfo.builder()
+                    .userId(item.getUserId())
+                    .createDate(item.getCreateDate())
+                    .build();
+
+  }
+
+  @Bean
+  public MyBatisBatchItemWriter<RestUserInfo> writer(@Qualifier("slaveSqlSessionFactory") SqlSessionFactory sqlSessionFactory) {
+    return new MyBatisBatchItemWriterBuilder<RestUserInfo>()
+            .sqlSessionFactory(sqlSessionFactory)
+            .statementId("com.template.batch.dao.slave.RestUserInfoDao.add")
+            .assertUpdates(true)
             .build();
   }
 
