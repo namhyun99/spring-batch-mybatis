@@ -11,11 +11,11 @@ public interface RestUserInfoDao {
 
   RestUserInfo findOneByUserId(@Param("userId") String userId);
 
-  void add(RestUserInfo restUserInfo);
+  int add(RestUserInfo restUserInfo);
 
-  void addAll(List<RestUserInfo> restUserInfos);
+  int addAll(List<RestUserInfo> restUserInfos);
 
   int getAllCount();
 
-  void deleteAll();
+  int deleteAll();
 }

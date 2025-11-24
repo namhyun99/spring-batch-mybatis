@@ -4,12 +4,11 @@ package com.template.batch.job;
 import com.template.batch.dao.master.UserInfoDao;
 import com.template.batch.dao.slave.RestUserInfoDao;
 import com.template.batch.entity.master.UserInfo;
-import com.template.batch.util.IdGenerator;
+import com.template.batch.util.IdGeneratorUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -34,7 +33,7 @@ public abstract class AbstractSetUserTestData {
 
     for(int i=0; i < TEST_DATA_COUNT; i++) {
       LocalDateTime createDate = LocalDateTime.now();
-      String userId = IdGenerator.generateUserId();
+      String userId = IdGeneratorUtil.generateUserId();
 
       testUserInfos.add(UserInfo.builder().userId(userId).restFlag("N").createDate(createDate).build());
     }

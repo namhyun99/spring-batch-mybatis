@@ -1,7 +1,7 @@
 package com.template.batch.listener;
 
 import com.template.batch.BatchConstants;
-import com.template.batch.util.IdGenerator;
+import com.template.batch.util.IdGeneratorUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
@@ -16,7 +16,7 @@ public class TemplateJobListener implements JobExecutionListener {
   public void beforeJob(JobExecution jobExecution) {
     String code = jobExecution.getJobParameters().getString(BatchConstants.BATCH_JOB_TYPE.name());
 
-    String batchJobId = IdGenerator.generateJobId(code);
+    String batchJobId = IdGeneratorUtil.generateJobId(code);
     jobExecution.getExecutionContext().putString(BatchConstants.BATCH_JOB_ID.name(), batchJobId);
     log.warn("[{}] beforeJob. jobId=[{}], jobName=[{}]",  batchJobId, jobExecution.getJobId(), jobExecution.getJobInstance().getJobName());
   }

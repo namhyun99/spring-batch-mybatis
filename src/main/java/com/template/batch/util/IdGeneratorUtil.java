@@ -7,7 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.StringTokenizer;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class IdGenerator {
+public class IdGeneratorUtil {
 
   public static AtomicLong userSeq = new AtomicLong();
   public static AtomicLong jobSeq = new AtomicLong();
@@ -19,30 +19,25 @@ public class IdGenerator {
     sb.append(batchJobType);
     sb.append(getIpAddress());
     sb.append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
-    sb.append(idSeq(4));
+    sb.append(idSeq(jobSeq, 4));
     return sb.toString();
   }
 
-  private static String idSeq(int len) {
-    Long expect = Long.parseLong("1" + String.format("%0" + len +"d", 0));
-    String numStr = String.format("%0" + len +"d", jobSeq.getAndIncrement());
-    jobSeq.compareAndSet(expect, 0);
-    return numStr;
-  }
 
   public static String generateUserId() {
     StringBuffer sb = new StringBuffer();
     sb.append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS")));
-    sb.append(genSeqNumber(4));
+    sb.append(idSeq(userSeq,4));
     return sb.toString();
   }
 
-  private static String genSeqNumber(int len) {
+  private static String idSeq(AtomicLong atomicLong, int len) {
     Long expect = Long.parseLong("1" + String.format("%0" + len +"d", 0));
-    String numStr = String.format("%0" + len +"d", userSeq.getAndIncrement());
-    userSeq.compareAndSet(expect, 0);
+    String numStr = String.format("%0" + len +"d", atomicLong.getAndIncrement());
+    atomicLong.compareAndSet(expect, 0);
     return numStr;
   }
+
 
   public static String getIpAddress()  {
     String hostAddress = null;

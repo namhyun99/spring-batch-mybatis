@@ -11,7 +11,7 @@ public interface UserInfoDao {
 
   UserInfo findOneByUserId(@Param("userId") String userId);
 
-  List<UserInfo> findByCreateDateBetween(@Param("startDate") String startDate, @Param("endDate") String endDate);
+  List<UserInfo> findByCreateDateBetween(@Param("startDate") String startDate, @Param("endDate") String endDate, @Param("skipRows") int skipRows, @Param("pageSize") int pageSize);
 
   void add(UserInfo userInfo);
 

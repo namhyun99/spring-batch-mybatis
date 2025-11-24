@@ -2,7 +2,9 @@ package com.template.batch.config;
 
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.ibatis.session.ExecutorType;
+import org.apache.ibatis.session.LocalCacheScope;
 import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.type.JdbcType;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -30,13 +32,17 @@ public class SlaveSourceConfig {
   @Bean("slaveSqlSessionFactory")
   public SqlSessionFactory slaveSqlSessionFactory(@Qualifier("slaveDataSource") DataSource dataSource) throws Exception {
     org.apache.ibatis.session.Configuration configuration = new org.apache.ibatis.session.Configuration();
+    configuration.setJdbcTypeForNull(JdbcType.NULL);
+    configuration.setLocalCacheScope(LocalCacheScope.STATEMENT);
+    configuration.setCacheEnabled(false);
     configuration.setDefaultExecutorType(ExecutorType.BATCH);
     configuration.setMapUnderscoreToCamelCase(true);
 
     SqlSessionFactoryBean bean = new SqlSessionFactoryBean();
     bean.setDataSource(dataSource);
-    bean.setTypeAliasesPackage("com.template.batch.entity.slave");
     bean.setConfiguration(configuration);
+
+    bean.setTypeAliasesPackage("com.template.batch.entity.slave");
 
     Resource[] res = new PathMatchingResourcePatternResolver().getResources("classpath*:META-INF/sql/slave/**/*-sql.xml");
     bean.setMapperLocations(res);

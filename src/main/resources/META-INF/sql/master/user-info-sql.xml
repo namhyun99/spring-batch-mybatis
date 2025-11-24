@@ -21,7 +21,7 @@
     FROM USER_INFO
       WHERE CREATE_DATE BETWEEN #{startDate, jdbcType=TIMESTAMP} AND #{endDate, jdbcType=TIMESTAMP}
     ORDER BY CREATE_DATE ASC
-      LIMIT #{_skiprows}, #{_pagesize}
+      LIMIT #{skipRows}, #{pageSize}
   </select>
 
   <select id="getAllCount" resultType="int">
