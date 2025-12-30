@@ -1,7 +1,7 @@
 package com.template.batch.job;
 
-import com.template.batch.BatchConstants;
-import com.template.batch.BatchJobType;
+import com.template.batch.BatchExecutionKey;
+import com.template.batch.entity.type.BatchJobType;
 import com.template.batch.job.chunk.TemplateMyBatisCursorChuckJob;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -35,7 +35,7 @@ public class TemplateMyBatisCursorChuckJobTest extends AbstractSetUserTestData {
   public void restUserCursorJob() throws Exception {
     JobParameters jobParameters =
             new JobParametersBuilder().addLong("timestamp", System.currentTimeMillis())
-                    .addString(BatchConstants.BATCH_JOB_TYPE.name(), BatchJobType.TEMPLATE.getCode())
+                    .addString(BatchExecutionKey.JOB_TYPE.name(), BatchJobType.TEMPLATE.getCode())
                     .addString("startDate", LocalDate.now().minusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE) + " 00:00:00")
                     .addString("endDate", LocalDate.now().plusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE) + " 23:59:59")
                     .toJobParameters();
