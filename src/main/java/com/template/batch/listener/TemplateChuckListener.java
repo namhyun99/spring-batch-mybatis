@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 public class TemplateChuckListener implements ChunkListener {
   @Override
   public void beforeChunk(ChunkContext context) {
-    String jobId = context.getStepContext().getStepExecution().getJobExecution().getExecutionContext().getString(BatchExecutionKey.JOB_ID.name());
+    String jobId = context.getStepContext().getStepExecution().getJobExecution().getExecutionContext().getString(BatchExecutionKey.JOB_ID);
     log.info("🟢 [{}] BeforeChunk - {}",
             jobId,
             context.getStepContext().getStepName());
@@ -19,7 +19,7 @@ public class TemplateChuckListener implements ChunkListener {
 
   @Override
   public void afterChunk(ChunkContext context) {
-    String jobId = context.getStepContext().getStepExecution().getJobExecution().getExecutionContext().getString(BatchExecutionKey.JOB_ID.name());
+    String jobId = context.getStepContext().getStepExecution().getJobExecution().getExecutionContext().getString(BatchExecutionKey.JOB_ID);
     log.info("🔵 [{}] AfterChunk - Read={}, Write={}",
             jobId,
             context.getStepContext().getStepExecution().getReadCount(),
@@ -28,7 +28,7 @@ public class TemplateChuckListener implements ChunkListener {
 
   @Override
   public void afterChunkError(ChunkContext context) {
-    String jobId = context.getStepContext().getStepExecution().getJobExecution().getExecutionContext().getString(BatchExecutionKey.JOB_ID.name());
+    String jobId = context.getStepContext().getStepExecution().getJobExecution().getExecutionContext().getString(BatchExecutionKey.JOB_ID);
 
     log.error("🔴 [{}] Chunk Error - {}", jobId, context.getStepContext().getStepName());
   }

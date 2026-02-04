@@ -39,7 +39,7 @@ public class TemplateChuckRetryCaseJobTest extends AbstractSetUserTestData{
   public void writerRetryJob() throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException {
     JobParameters jobParameters =
             new JobParametersBuilder().addLong("timestamp", System.currentTimeMillis())
-                    .addString(BatchExecutionKey.JOB_TYPE.name(), BatchJobType.TEMPLATE.getCode())
+                    .addString(BatchExecutionKey.JOB_TYPE, BatchJobType.TEMPLATE.getCode())
                     .addString("startDate", LocalDate.now().minusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE) + " 00:00:00")
                     .addString("endDate", LocalDate.now().plusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE) + " 23:59:59")
                     .toJobParameters();

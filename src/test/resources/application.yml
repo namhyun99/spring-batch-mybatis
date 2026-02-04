@@ -6,13 +6,13 @@ spring:
   # H2 데이터베이스 URL 설정
   datasource:
     master:
-      jdbcUrl: jdbc:h2:tcp://localhost/D:/study/template-batch/data/bat
+      jdbcUrl: jdbc:h2:mem:main
       driverClassName: org.h2.Driver
       username: sa
       password:
 
     slave:
-      jdbcUrl: jdbc:h2:tcp://localhost/D:/study/template-batch/data/bat
+      jdbcUrl: jdbc:h2:mem:sub
       driverClassName: org.h2.Driver
       username: sa
       password:

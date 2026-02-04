@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.template.batch.dao.master.BatchHistoryDao">
+
+  <resultMap id="batch-history-result" type="BatchHistory">
+    <result property="jobId"          column="USER_ID"/>
+    <result property="jobType"        column="REST_FLAG"/>
+    <result property="startDate"      column="CREATE_DATE"/>
+    <result property="endDate"        column="CREATE_DATE"/>
+    <result property="name"           column="name"/>
+    <result property="fileSize"       column="CREATE_DATE"/>
+    <result property="totalCount"     column="CREATE_DATE"/>
+    <result property="processCount"   column="CREATE_DATE"/>
+    <result property="unprocessCount" column="CREATE_DATE"/>
+    <result property="batchStatus"    column="CREATE_DATE"/>
+    <result property="resultCode"     column="CREATE_DATE"/>
+    <result property="resultMessage"  column="CREATE_DATE"/>
+  </resultMap>
+
+  <select id="findOne" resultMap="batch-history-result">
+    SELECT
+     *
+    FROM BATCH_HISTORY
+     WHERE JOB_ID = #{jobId}
+  </select>
+  
+  <insert id="addBatchHistory">
+    INSERT
+  </insert>
+
+  <update id="upsertBatchHistory">
+
+  </update>
+
+  <delete id="deleteBatchHistory">
+    DELETE FROM BATCH_HISTORY
+     WHERE JOB_ID = #{jobId}
+  </delete>
+</mapper>

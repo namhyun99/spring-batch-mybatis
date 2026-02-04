@@ -17,7 +17,7 @@ public class TemplateStepListener implements StepExecutionListener {
 
   @Override
   public void beforeStep(StepExecution stepExecution) {
-    String batchJobId = stepExecution.getJobExecution().getExecutionContext().getString(BatchExecutionKey.JOB_ID.name());
+    String batchJobId = stepExecution.getJobExecution().getExecutionContext().getString(BatchExecutionKey.JOB_ID);
     log.warn("[{}] beforeStep. stepName=[{}]",
             batchJobId,
             stepExecution.getStepName());
@@ -26,7 +26,7 @@ public class TemplateStepListener implements StepExecutionListener {
 
   @Override
   public ExitStatus afterStep(StepExecution stepExecution) {
-    String batchJobId = stepExecution.getJobExecution().getExecutionContext().getString(BatchExecutionKey.JOB_ID.name());
+    String batchJobId = stepExecution.getJobExecution().getExecutionContext().getString(BatchExecutionKey.JOB_ID);
 
 
     if(stepExecution.getStatus() != BatchStatus.COMPLETED) {

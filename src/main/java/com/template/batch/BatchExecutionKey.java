@@ -1,7 +1,10 @@
 package com.template.batch;
 
-public enum BatchExecutionKey {
-  JOB_ID,
-  JOB_TYPE,
+public class BatchExecutionKey {
+  public static final String JOB_ID = "jobId";
+  public static final String JOB_TYPE = "jobType";
+
+  public static final String PROCESS_RESULT="processResult";
+
   ;
 }

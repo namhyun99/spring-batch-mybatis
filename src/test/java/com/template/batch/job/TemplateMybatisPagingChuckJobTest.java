@@ -35,7 +35,7 @@ public class TemplateMybatisPagingChuckJobTest extends AbstractSetUserTestData{
   public void restUserJob() throws Exception {
      JobParameters jobParameters =
             new JobParametersBuilder().addLong("timestamp", System.currentTimeMillis())
-                    .addString(BatchExecutionKey.JOB_TYPE.name(), BatchJobType.TEMPLATE.getCode())
+                    .addString(BatchExecutionKey.JOB_TYPE, BatchJobType.TEMPLATE.getCode())
                     .addString("startDate", LocalDate.now().minusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE) + " 00:00:00")
                     .addString("endDate", LocalDate.now().plusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE) + " 23:59:59")
                     .toJobParameters();
